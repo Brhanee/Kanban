@@ -1,0 +1,9 @@
+services:
+  pm-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pm-backend
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

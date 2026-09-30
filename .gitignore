@@ -60,6 +60,10 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# Local application data
+backend/data/*.sqlite3
+backend/data/*.sqlite3-journal
+
 # Flask stuff:
 instance/
 .webassets-cache
