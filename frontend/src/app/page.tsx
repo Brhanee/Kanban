@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AIAssistant } from "@/components/AIAssistant";
 import { KanbanBoard } from "@/components/KanbanBoard";
 import type { BoardData } from "@/lib/kanban";
 
@@ -33,10 +34,13 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [boardError, setBoardError] = useState("");
   const [token, setToken] = useState<string | null>(null);
   const [board, setBoard] = useState<BoardData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAssistantOpen, setIsAssistantOpen] = useState(false);
 
   const loadBoard = useCallback(
     async (currentToken: string) => {
@@ -46,9 +50,23 @@ export default function Home() {
     []
   );
 
+  const runBoardAction = async (action: () => Promise<void>) => {
+    setBoardError("");
+    try {
+      await action();
+    } catch (requestError) {
+      setBoardError(
+        requestError instanceof Error && requestError.message
+          ? requestError.message
+          : "Board changes could not be saved."
+      );
+    }
+  };
+
   useEffect(() => {
     const storedToken = window.localStorage.getItem(STORAGE_KEY);
     if (!storedToken) {
+      setIsCheckingSession(false);
       return;
     }
 
@@ -58,6 +76,10 @@ export default function Home() {
       .catch(() => {
         window.localStorage.removeItem(STORAGE_KEY);
         setToken(null);
+        setError("Your session expired. Please sign in again.");
+      })
+      .finally(() => {
+        setIsCheckingSession(false);
       });
   }, [loadBoard]);
 
@@ -100,6 +122,7 @@ export default function Home() {
     setUsername("");
     setPassword("");
     setError("");
+    setIsAssistantOpen(false);
   };
 
   const handleMoveCard = async (activeCardId: string, overId: string) => {
@@ -118,15 +141,17 @@ export default function Home() {
       ? overColumn.cardIds.indexOf(overId)
       : overColumn.cardIds.length;
 
-    await fetchJson(`/api/cards/${activeCardId}/move`, {
-      method: "POST",
-      body: JSON.stringify({
-        column_id: overColumn.id,
-        position: targetPosition,
-      }),
-    }, token);
+    await runBoardAction(async () => {
+      await fetchJson(`/api/cards/${activeCardId}/move`, {
+        method: "POST",
+        body: JSON.stringify({
+          column_id: overColumn.id,
+          position: targetPosition,
+        }),
+      }, token);
 
-    await loadBoard(token);
+      await loadBoard(token);
+    });
   };
 
   const handleRenameColumn = async (columnId: string, title: string) => {
@@ -134,12 +159,14 @@ export default function Home() {
       return;
     }
 
-    await fetchJson(`/api/columns/${columnId}`, {
-      method: "PATCH",
-      body: JSON.stringify({ title }),
-    }, token);
+    await runBoardAction(async () => {
+      await fetchJson(`/api/columns/${columnId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title }),
+      }, token);
 
-    await loadBoard(token);
+      await loadBoard(token);
+    });
   };
 
   const handleAddCard = async (columnId: string, title: string, details: string) => {
@@ -147,12 +174,14 @@ export default function Home() {
       return;
     }
 
-    await fetchJson("/api/cards", {
-      method: "POST",
-      body: JSON.stringify({ column_id: columnId, title, details }),
-    }, token);
+    await runBoardAction(async () => {
+      await fetchJson("/api/cards", {
+        method: "POST",
+        body: JSON.stringify({ column_id: columnId, title, details }),
+      }, token);
 
-    await loadBoard(token);
+      await loadBoard(token);
+    });
   };
 
   const handleDeleteCard = async (columnId: string, cardId: string) => {
@@ -160,16 +189,23 @@ export default function Home() {
       return;
     }
 
-    await fetchJson(`/api/cards/${cardId}`, {
-      method: "DELETE",
-    }, token);
+    await runBoardAction(async () => {
+      await fetchJson(`/api/cards/${cardId}`, {
+        method: "DELETE",
+      }, token);
 
-    await loadBoard(token);
+      await loadBoard(token);
+    });
   };
 
   if (!isAuthenticated) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
+        {isCheckingSession ? (
+          <p role="status" className="text-sm font-medium text-[var(--gray-text)]">
+            Loading your board...
+          </p>
+        ) : (
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-lg"
@@ -224,12 +260,21 @@ export default function Home() {
             {isLoading ? "Signing in..." : "Log in"}
           </button>
         </form>
+        )}
       </main>
     );
   }
 
   return (
     <div className="relative">
+      {boardError ? (
+        <p
+          role="alert"
+          className="absolute left-6 top-6 z-20 max-w-[calc(100%-9rem)] rounded-lg border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-700 shadow-sm"
+        >
+          {boardError}
+        </p>
+      ) : null}
       <div className="absolute right-6 top-6 z-10">
         <button
           type="button"
@@ -241,11 +286,21 @@ export default function Home() {
       </div>
       <KanbanBoard
         board={board ?? undefined}
+        assistantOpen={isAssistantOpen}
+        onToggleAssistant={() => setIsAssistantOpen((open) => !open)}
         onMoveCard={handleMoveCard}
         onRenameColumn={handleRenameColumn}
         onAddCard={handleAddCard}
         onDeleteCard={handleDeleteCard}
       />
+      {token ? (
+        <AIAssistant
+          open={isAssistantOpen}
+          token={token}
+          onClose={() => setIsAssistantOpen(false)}
+          onBoardUpdated={setBoard}
+        />
+      ) : null}
     </div>
   );
 }

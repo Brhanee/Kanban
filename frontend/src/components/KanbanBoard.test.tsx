@@ -1,5 +1,6 @@
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { vi } from "vitest";
 import { KanbanBoard } from "@/components/KanbanBoard";
 
 const getFirstColumn = () => screen.getAllByTestId(/column-/i)[0];
@@ -8,6 +9,15 @@ describe("KanbanBoard", () => {
   it("renders five columns", () => {
     render(<KanbanBoard />);
     expect(screen.getAllByTestId(/column-/i)).toHaveLength(5);
+  });
+
+  it("opens the AI assistant from the board header", async () => {
+    const onToggleAssistant = vi.fn();
+    render(<KanbanBoard onToggleAssistant={onToggleAssistant} />);
+
+    await userEvent.click(screen.getByRole("button", { name: "AI Assistant" }));
+
+    expect(onToggleAssistant).toHaveBeenCalledOnce();
   });
 
   it("renames a column", async () => {

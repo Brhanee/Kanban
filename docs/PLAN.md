@@ -14,9 +14,9 @@ Build a locally hosted project management application with a signed-in Kanban bo
 ## Phase 0: Plan approval gate
 
 ### Checklist
-- [ ] Review this plan with the user.
-- [ ] Confirm requirements, scope, and acceptance criteria.
-- [ ] Get explicit approval before starting implementation beyond the planning phase.
+- [x] Review this plan with the user.
+- [x] Confirm requirements, scope, and acceptance criteria.
+- [x] Get explicit approval before starting implementation beyond the planning phase.
 
 ### Success criteria
 - The user agrees that the roadmap, features, and validation steps match expectations.
@@ -30,18 +30,18 @@ Build a locally hosted project management application with a signed-in Kanban bo
 Set up the Docker infrastructure, Python backend skeleton, and shell scripts so the project can run locally and confirm a basic hello-world response before feature work begins.
 
 ### Checklist
-- [ ] Create or update Docker configuration for the app container.
-- [ ] Set up a Python backend directory with FastAPI.
-- [ ] Add a simple hello-world endpoint to verify the backend starts.
-- [ ] Serve static HTML or a minimal frontend placeholder from the backend to prove local delivery works.
-- [ ] Add start/stop scripts for Windows, Mac, and Linux under scripts/.
-- [ ] Document expected startup commands and ports.
-- [ ] Verify both a browser-level static response and an API response work locally.
+- [x] Create or update Docker configuration for the app container.
+- [x] Set up a Python backend directory with FastAPI.
+- [x] Add a simple hello-world endpoint to verify the backend starts.
+- [x] Serve static HTML or a minimal frontend placeholder from the backend to prove local delivery works.
+- [x] Add start/stop scripts for Windows, Mac, and Linux under scripts/.
+- [x] Document expected startup commands and ports.
+- [x] Verify both a browser-level static response and an API response work locally.
 
 ### Tests
-- [ ] Start the app locally.
-- [ ] Confirm the root route responds successfully.
-- [ ] Confirm the API endpoint returns the expected payload.
+- [x] Start the app locally.
+- [x] Confirm the root route responds successfully.
+- [x] Confirm the API endpoint returns the expected payload.
 - [ ] Confirm script-based startup and shutdown complete without errors.
 
 ### Success criteria
@@ -58,17 +58,17 @@ Set up the Docker infrastructure, Python backend skeleton, and shell scripts so 
 Turn the existing frontend demo into a production-ready static site served by the app, with the Kanban board displayed at /.
 
 ### Checklist
-- [ ] Review the existing Next.js app in frontend/ and keep the current useful UI elements.
-- [ ] Ensure the app builds correctly for production.
-- [ ] Configure the backend to serve the built frontend static output.
-- [ ] Confirm the app loads at / and renders the Kanban board.
-- [ ] Keep the configured styling system and color scheme from the current design.
-- [ ] Add or update tests covering the core board render.
+- [x] Review the existing Next.js app in frontend/ and keep the current useful UI elements.
+- [x] Ensure the app builds correctly for production.
+- [x] Configure the backend to serve the built frontend static output.
+- [x] Confirm the app loads at / and renders the Kanban board.
+- [x] Keep the configured styling system and color scheme from the current design.
+- [x] Add or update tests covering the core board render.
 
 ### Tests
-- [ ] Run frontend unit tests for board rendering.
-- [ ] Run a browser-level check that the homepage displays the board.
-- [ ] Validate that the app builds without warnings that block deployment.
+- [x] Run frontend unit tests for board rendering.
+- [x] Run a browser-level check that the homepage displays the board.
+- [x] Validate that the app builds without warnings that block deployment.
 
 ### Success criteria
 - The homepage loads the Kanban board at /.
@@ -83,17 +83,17 @@ Turn the existing frontend demo into a production-ready static site served by th
 Add a simple sign-in gate using the dummy credentials user / password before access to the Kanban board.
 
 ### Checklist
-- [ ] Add a login screen that is shown before the user reaches the board.
-- [ ] Implement authentication with the hardcoded credentials user and password.
-- [ ] Show an error state for invalid credentials.
-- [ ] Add a logout action once the board is visible.
-- [ ] Ensure unauthenticated users cannot access the board content.
-- [ ] Add tests for login success, invalid login, and logout flow.
+- [x] Add a login screen that is shown before the user reaches the board.
+- [x] Implement authentication with the hardcoded credentials user and password.
+- [x] Show an error state for invalid credentials.
+- [x] Add a logout action once the board is visible.
+- [x] Ensure unauthenticated users cannot access the board content.
+- [x] Add tests for login success, invalid login, and logout flow.
 
 ### Tests
-- [ ] Submit valid credentials and confirm the board appears.
-- [ ] Submit invalid credentials and confirm the login error is shown.
-- [ ] Log out and confirm the user is returned to the login state.
+- [x] Submit valid credentials and confirm the board appears.
+- [x] Submit invalid credentials and confirm the login error is shown.
+- [x] Log out and confirm the user is returned to the login state.
 
 ### Success criteria
 - The Kanban board is inaccessible until the user signs in.
@@ -158,18 +158,20 @@ Add backend routes to read and modify the Kanban data for a specific user, creat
 Replace the in-memory front-end board with persistent backend-backed state.
 
 ### Checklist
-- [ ] Connect the frontend to the backend routes.
-- [ ] Load board data from the API on page load.
-- [ ] Save changes to the board after card moves, deletes, additions, and renames.
-- [ ] Handle loading and error states.
-- [ ] Ensure the authenticated user context is used when loading the board.
-- [ ] Add end-to-end tests covering major board actions.
+- [x] Connect the frontend to the backend routes.
+- [x] Load board data from the API on page load.
+- [x] Save changes to the board after card moves, deletes, additions, and renames.
+- [x] Handle loading and error states.
+- [x] Ensure the authenticated user context is used when loading the board.
+- [x] Add working end-to-end tests covering major board actions.
 
 ### Tests
-- [ ] Initial board load fetches from the backend.
-- [ ] A created card is persisted and remains after refresh.
-- [ ] A moved card persists correctly.
-- [ ] Errors are surfaced without crashing the app.
+- [x] Initial board load fetches from the backend.
+- [x] A created card is persisted and remains after refresh.
+- [x] A moved card persists correctly.
+- [x] Errors are surfaced without crashing the app.
+
+The Playwright suite authenticates through the app flow and mocks the backend to verify board actions, refresh persistence, and error states.
 
 ### Success criteria
 - The UI is still usable and visually consistent.
@@ -184,16 +186,18 @@ Replace the in-memory front-end board with persistent backend-backed state.
 Connect the backend to OpenRouter and prove the external AI call works.
 
 ### Checklist
-- [ ] Configure environment variables for the AI API key.
-- [ ] Add a minimal backend route or service for AI connectivity testing.
-- [ ] Validate a simple prompt such as 2 + 2.
-- [ ] Confirm the response is returned in the expected format.
-- [ ] Add reasonable error handling for API failures or invalid responses.
+- [x] Configure environment variables for the AI API key.
+- [x] Add a minimal backend route or service for AI connectivity testing.
+- [x] Validate a simple prompt such as 2 + 2 against OpenRouter.
+- [x] Confirm the response is returned in the expected format.
+- [x] Add reasonable error handling for API failures or invalid responses.
 
 ### Tests
-- [ ] Make a direct AI request with a trivial prompt.
-- [ ] Verify the result arrives successfully.
-- [ ] Verify the system fails gracefully when credentials are missing or the upstream request fails.
+- [x] Make a direct AI request with a trivial prompt.
+- [x] Verify the result arrives successfully.
+- [x] Verify the system fails gracefully when credentials are missing or the upstream request fails.
+
+For the live smoke test, set `OPENROUTER_API_KEY` in the root `.env`, start the app, authenticate with `/api/auth/login`, then call `POST /api/ai/connectivity`; the authenticated live request was verified and returned `{"response":"4"}`.
 
 ### Success criteria
 - OpenRouter connectivity is proven with a working model response.
@@ -207,16 +211,16 @@ Connect the backend to OpenRouter and prove the external AI call works.
 Send the current Kanban JSON and the user question to the AI, then use structured output to respond to the user and optionally update the board.
 
 ### Checklist
-- [ ] Add the board JSON and conversation context to the AI request.
-- [ ] Define a structured output schema for the assistant response.
-- [ ] Support both a plain answer and optional board update instructions.
-- [ ] Validate the backend correctly interprets the model response.
-- [ ] Add tests for both a textual answer and a board mutating answer.
+- [x] Add the board JSON and conversation context to the AI request.
+- [x] Define a structured output schema for the assistant response.
+- [x] Support both a plain answer and optional board update instructions.
+- [x] Validate the backend correctly interprets the model response.
+- [x] Add tests for both a textual answer and a board mutating answer.
 
 ### Tests
-- [ ] Ask a planning question and verify a valid response is returned.
-- [ ] Ask for a board modification and confirm the backend updates the Kanban state.
-- [ ] Ensure malformed model output is rejected or handled safely.
+- [x] Ask a planning question and verify a valid response is returned.
+- [x] Ask for a board modification and confirm the backend updates the Kanban state.
+- [x] Ensure malformed model output is rejected or handled safely.
 
 ### Success criteria
 - The AI can answer the user and optionally modify the board.
@@ -231,17 +235,17 @@ Send the current Kanban JSON and the user question to the AI, then use structure
 Add an elegant chat panel in the frontend enabling the user to ask questions and allow the AI to update the Kanban when appropriate.
 
 ### Checklist
-- [ ] Add a sidebar widget that is visually consistent with the existing design language.
-- [ ] Let the user send a message and display conversation history.
-- [ ] Call the backend AI route with the current board state and the latest user question.
-- [ ] Render the AI response in the UI.
-- [ ] If the AI proposes board changes, apply them to the client state and refresh automatically.
-- [ ] Add UI tests covering conversation flow and board refresh behavior.
+- [x] Add a sidebar widget that is visually consistent with the existing design language.
+- [x] Let the user send a message and display conversation history.
+- [x] Call the backend AI route with the current board state and the latest user question.
+- [x] Render the AI response in the UI.
+- [x] If the AI proposes board changes, apply them to the client state and refresh automatically.
+- [x] Add UI tests covering conversation flow and board refresh behavior.
 
 ### Tests
-- [ ] Send a message and verify the response appears.
-- [ ] Trigger a board-changing AI suggestion and confirm the UI updates.
-- [ ] Verify the UI behaves correctly when the backend returns an error.
+- [x] Send a message and verify the response appears.
+- [x] Trigger a board-changing AI suggestion and confirm the UI updates.
+- [x] Verify the UI behaves correctly when the backend returns an error.
 
 ### Success criteria
 - The assistant is accessible from the board and feels integrated into the product.

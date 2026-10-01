@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -21,6 +21,8 @@ type KanbanBoardProps = {
   onRenameColumn?: (columnId: string, title: string) => void | Promise<void>;
   onAddCard?: (columnId: string, title: string, details: string) => void | Promise<void>;
   onDeleteCard?: (columnId: string, cardId: string) => void | Promise<void>;
+  assistantOpen?: boolean;
+  onToggleAssistant?: () => void;
 };
 
 export const KanbanBoard = ({
@@ -29,15 +31,12 @@ export const KanbanBoard = ({
   onRenameColumn,
   onAddCard,
   onDeleteCard,
+  assistantOpen = false,
+  onToggleAssistant,
 }: KanbanBoardProps) => {
-  const [board, setBoard] = useState<BoardData>(() => externalBoard ?? initialData);
+  const [internalBoard, setInternalBoard] = useState<BoardData>(initialData);
+  const board = externalBoard ?? internalBoard;
   const [activeCardId, setActiveCardId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (externalBoard) {
-      setBoard(externalBoard);
-    }
-  }, [externalBoard]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -64,7 +63,7 @@ export const KanbanBoard = ({
       return;
     }
 
-    setBoard((prev) => ({
+    setInternalBoard((prev) => ({
       ...prev,
       columns: moveCard(prev.columns, active.id as string, over.id as string),
     }));
@@ -76,7 +75,7 @@ export const KanbanBoard = ({
       return;
     }
 
-    setBoard((prev) => ({
+    setInternalBoard((prev) => ({
       ...prev,
       columns: prev.columns.map((column) =>
         column.id === columnId ? { ...column, title } : column
@@ -91,7 +90,7 @@ export const KanbanBoard = ({
     }
 
     const id = createId("card");
-    setBoard((prev) => ({
+    setInternalBoard((prev) => ({
       ...prev,
       cards: {
         ...prev.cards,
@@ -111,7 +110,7 @@ export const KanbanBoard = ({
       return;
     }
 
-    setBoard((prev) => {
+    setInternalBoard((prev) => {
       return {
         ...prev,
         cards: Object.fromEntries(
@@ -151,13 +150,26 @@ export const KanbanBoard = ({
                 and capture quick notes without getting buried in settings.
               </p>
             </div>
-            <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-5 py-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--gray-text)]">
-                Focus
-              </p>
-              <p className="mt-2 text-lg font-semibold text-[var(--primary-blue)]">
-                One board. Five columns. Zero clutter.
-              </p>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="rounded-2xl border border-[var(--stroke)] bg-[var(--surface)] px-5 py-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.25em] text-[var(--gray-text)]">
+                  Focus
+                </p>
+                <p className="mt-2 text-lg font-semibold text-[var(--primary-blue)]">
+                  One board. Five columns. Zero clutter.
+                </p>
+              </div>
+              {onToggleAssistant ? (
+                <button
+                  type="button"
+                  aria-expanded={assistantOpen}
+                  aria-controls="ai-assistant-panel"
+                  onClick={onToggleAssistant}
+                  className="min-h-11 rounded-xl border border-[var(--navy-dark)] bg-[var(--navy-dark)] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[var(--primary-blue)]"
+                >
+                  AI Assistant
+                </button>
+              ) : null}
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-4">

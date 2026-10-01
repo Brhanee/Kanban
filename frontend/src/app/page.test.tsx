@@ -7,6 +7,7 @@ describe("Home login flow", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it("requires valid credentials before showing the board and allows logout", async () => {
@@ -64,5 +65,90 @@ describe("Home login flow", () => {
 
     await user.click(screen.getByRole("button", { name: /log out/i }));
     expect(screen.getByLabelText(/username/i)).toBeInTheDocument();
+  }, 10_000);
+
+  it("sends a chat message and displays the AI-updated board", async () => {
+    const user = userEvent.setup();
+    const initialBoard = {
+      columns: [{ id: "todo", title: "Todo", cardIds: ["card-1"] }],
+      cards: {
+        "card-1": { id: "card-1", title: "Seeded card", details: "Original" },
+      },
+    };
+    const updatedBoard = {
+      columns: [{ id: "todo", title: "Todo", cardIds: ["card-1", "ai-card"] }],
+      cards: {
+        ...initialBoard.cards,
+        "ai-card": { id: "ai-card", title: "AI-created card", details: "Added by AI" },
+      },
+    };
+    const fetchMock = vi.fn();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => initialBoard,
+    });
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        response: "I added a card.",
+        actions: [{ operation: "create_card" }],
+        board: updatedBoard,
+      }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    localStorage.setItem("pm-access-token", "demo-token");
+
+    render(<Home />);
+
+    await screen.findByText("Seeded card");
+    await user.click(screen.getByRole("button", { name: "AI Assistant" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Message the assistant" }),
+      "Add a planning task"
+    );
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("I added a card.")).toBeInTheDocument();
+    expect(await screen.findByText("AI-created card")).toBeInTheDocument();
+    const chatRequest = fetchMock.mock.calls.find(([url]) => url === "/api/ai/chat");
+    expect(chatRequest?.[1]).toMatchObject({
+      method: "POST",
+      headers: {
+        Authorization: "Bearer demo-token",
+        "Content-Type": "application/json",
+      },
+    });
+    expect(JSON.parse(chatRequest?.[1]?.body as string)).toEqual({
+      message: "Add a planning task",
+      conversation: [],
+    });
+  });
+
+  it("shows an error when the AI chat request fails", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ columns: [], cards: {} }),
+    });
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ detail: "OpenRouter request failed" }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    localStorage.setItem("pm-access-token", "demo-token");
+
+    render(<Home />);
+
+    await user.click(await screen.findByRole("button", { name: "AI Assistant" }));
+    await user.type(
+      screen.getByRole("textbox", { name: "Message the assistant" }),
+      "Help me plan"
+    );
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "OpenRouter request failed"
+    );
   });
 });
