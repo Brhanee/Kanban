@@ -10,4 +10,9 @@ if ! command -v uv >/dev/null 2>&1; then
   python3 -m pip install --user uv
 fi
 
-uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+ENV_ARGS=()
+if [ -f "$PROJECT_ROOT/.env" ]; then
+  ENV_ARGS=(--env-file "$PROJECT_ROOT/.env")
+fi
+
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload ${ENV_ARGS[@]+"${ENV_ARGS[@]}"}

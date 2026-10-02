@@ -124,6 +124,32 @@ describe("Home login flow", () => {
     });
   });
 
+  it("shows a readable message for validation errors", async () => {
+    const user = userEvent.setup();
+    const fetchMock = vi.fn();
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        columns: [{ id: "todo", title: "Todo", cardIds: ["card-1"] }],
+        cards: { "card-1": { id: "card-1", title: "Seeded card", details: "" } },
+      }),
+    });
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      json: async () => ({ detail: [{ msg: "String should have at least 1 character" }] }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    localStorage.setItem("pm-access-token", "demo-token");
+
+    render(<Home />);
+
+    await user.click(await screen.findByRole("button", { name: "Edit Seeded card" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Request failed");
+    expect(screen.queryByText("[object Object]")).not.toBeInTheDocument();
+  });
+
   it("shows an error when the AI chat request fails", async () => {
     const user = userEvent.setup();
     const fetchMock = vi.fn();

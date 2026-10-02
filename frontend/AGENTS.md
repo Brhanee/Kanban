@@ -1,12 +1,12 @@
 # Frontend agent guide
 
 ## Purpose
-This directory contains the Next.js frontend for the PM MVP. The app currently demonstrates a client-side Kanban board and is intended to evolve into a production-like project management interface with login, persistence, and AI-assisted board updates.
+This directory contains the Next.js frontend for the PM MVP. It is built as a static export (`out/`) and served by the FastAPI backend, which owns all board state.
 
 ## Project structure
-- src/app/page.tsx: the homepage entrypoint; it renders the Kanban board.
-- src/components/: UI components for the board, cards, forms, and drag/drop behavior.
-- src/lib/kanban.ts: the board data model and drag logic.
+- src/app/page.tsx: sign-in, token storage, and every board API call (each change is saved, then the board is reloaded).
+- src/components/: UI components for the board, cards, forms, drag/drop, and the AI assistant sidebar.
+- src/lib/kanban.ts: the board types, plus demo data and a client-side moveCard() used only when KanbanBoard is rendered without props (unit tests).
 - src/test/setup.ts: shared Vitest setup for the frontend tests.
 - tests/: browser-level Playwright coverage for the app.
 
@@ -19,10 +19,12 @@ The app uses:
 - Playwright for browser tests
 
 The present board includes:
+- sign-in and logout
 - five default columns
-- card creation and deletion
+- card creation, editing, and deletion
 - drag/drop card movement between columns
-- inline column renaming
+- inline column renaming (saved on Enter or blur)
+- an AI assistant sidebar that can change the board
 - a styled dashboard layout with the project color system
 
 ## Key data model
@@ -39,7 +41,7 @@ The board state is represented in src/lib/kanban.ts as:
   - title
   - details
 
-The drag logic is centralized in moveCard(), which handles card movement inside a column and across columns.
+With the backend connected, a drop sends the target column and position to `/api/cards/{id}/move`, and the backend reorders the cards.
 
 ## Important patterns
 - Use client components for interactive drag and board state updates.
@@ -54,10 +56,7 @@ Run the frontend checks with:
 - npm run test:e2e
 - npm run test:all
 
-The unit tests in src/components/KanbanBoard.test.tsx validate:
-- the board renders five columns
-- a column can be renamed
-- a card can be added and removed
+Unit tests (src/**/*.test.tsx) cover the board, column renaming, card editing, login, and the AI chat. Playwright tests (tests/) run against `next dev` with every `/api` call mocked by `page.route`.
 
 ## Agent guidance
 When changing this frontend:

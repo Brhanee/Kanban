@@ -11,7 +11,7 @@ type ChatMessage = {
 type ChatResponse = {
   response: string;
   board: BoardData;
-  detail?: string;
+  detail?: unknown;
 };
 
 type AIAssistantProps = {
@@ -69,7 +69,11 @@ export const AIAssistant = ({
       const payload = (await response.json().catch(() => null)) as ChatResponse | null;
 
       if (!response.ok) {
-        throw new Error(payload?.detail ?? "The assistant request failed.");
+        throw new Error(
+          typeof payload?.detail === "string"
+            ? payload.detail
+            : "The assistant request failed."
+        );
       }
       if (!payload || typeof payload.response !== "string" || !payload.board) {
         throw new Error("The assistant returned an invalid response.");

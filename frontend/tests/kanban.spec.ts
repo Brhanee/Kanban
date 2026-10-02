@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import type { BoardData } from "../src/lib/kanban";
 
-const createBoard = () => ({
+const createBoard = (): BoardData => ({
   columns: [
     { id: "col-backlog", title: "Backlog", cardIds: ["card-1", "card-2"] },
     { id: "col-discovery", title: "Discovery", cardIds: ["card-3"] },
@@ -30,6 +31,7 @@ const openBoard = async (
 ) => {
   const board = createBoard();
   let nextCardId = 100;
+  const renameRequests: string[] = [];
 
   await page.route("**/api/auth/login", (route) =>
     route.fulfill({
@@ -86,6 +88,16 @@ const openBoard = async (
   });
   await page.route(/\/api\/cards\/[^/]+$/, async (route) => {
     const cardId = route.request().url().split("/").at(-1);
+    if (route.request().method() === "PATCH" && cardId) {
+      const payload = route.request().postDataJSON() as { title: string; details: string };
+      board.cards[cardId] = { id: cardId, ...payload };
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(board.cards[cardId]),
+      });
+      return;
+    }
     if (cardId) {
       delete board.cards[cardId];
       for (const column of board.columns) {
@@ -94,12 +106,27 @@ const openBoard = async (
     }
     await route.fulfill({ status: 204, body: "" });
   });
+  await page.route("**/api/columns/*", async (route) => {
+    const columnId = route.request().url().split("/").at(-1);
+    const payload = route.request().postDataJSON() as { title: string };
+    renameRequests.push(payload.title);
+    const column = board.columns.find((item) => item.id === columnId);
+    if (column) {
+      column.title = payload.title;
+    }
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ id: columnId, title: payload.title }),
+    });
+  });
 
   await page.goto("/");
   await page.getByLabel("Username").fill("user");
   await page.getByLabel("Password").fill("password");
   await page.getByRole("button", { name: "Log in" }).click();
   await expect(page.getByRole("heading", { name: "Kanban Studio" })).toBeVisible();
+  return { renameRequests };
 };
 
 test("loads the authenticated kanban board", async ({ page }) => {
@@ -119,6 +146,32 @@ test("adds a card to a column", async ({ page }) => {
   await expect(
     page.locator('[data-testid^="column-"]').first().getByText("Playwright card")
   ).toBeVisible();
+});
+
+test("edits a card", async ({ page }) => {
+  await openBoard(page);
+  const card = page.getByTestId("card-card-1");
+  await card.getByRole("button", { name: "Edit Align roadmap themes" }).click();
+  await card.getByLabel("Card title").fill("Align product roadmap");
+  await card.getByLabel("Card details").fill("Agree themes with leads.");
+  await card.getByRole("button", { name: "Save" }).click();
+  await expect(card.getByText("Align product roadmap")).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId("card-card-1")).toContainText("Agree themes with leads.");
+});
+
+test("renames a column with fast typing in a single save", async ({ page }) => {
+  const { renameRequests } = await openBoard(page);
+  const title = page.getByTestId("column-col-backlog").getByLabel("Column title");
+  await title.fill("");
+  await title.pressSequentially("Ideas and backlog", { delay: 5 });
+  await title.press("Enter");
+  await expect(title).toHaveValue("Ideas and backlog");
+  expect(renameRequests).toEqual(["Ideas and backlog"]);
+  await page.reload();
+  await expect(
+    page.getByTestId("column-col-backlog").getByLabel("Column title")
+  ).toHaveValue("Ideas and backlog");
 });
 
 test("surfaces card save errors without hiding the board", async ({ page }) => {

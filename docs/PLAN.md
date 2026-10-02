@@ -42,7 +42,7 @@ Set up the Docker infrastructure, Python backend skeleton, and shell scripts so 
 - [x] Start the app locally.
 - [x] Confirm the root route responds successfully.
 - [x] Confirm the API endpoint returns the expected payload.
-- [ ] Confirm script-based startup and shutdown complete without errors.
+- [x] Confirm script-based startup and shutdown complete without errors.
 
 ### Success criteria
 - The app starts with a single command or script.

@@ -21,6 +21,7 @@ type KanbanBoardProps = {
   onRenameColumn?: (columnId: string, title: string) => void | Promise<void>;
   onAddCard?: (columnId: string, title: string, details: string) => void | Promise<void>;
   onDeleteCard?: (columnId: string, cardId: string) => void | Promise<void>;
+  onEditCard?: (cardId: string, title: string, details: string) => void | Promise<void>;
   assistantOpen?: boolean;
   onToggleAssistant?: () => void;
 };
@@ -31,6 +32,7 @@ export const KanbanBoard = ({
   onRenameColumn,
   onAddCard,
   onDeleteCard,
+  onEditCard,
   assistantOpen = false,
   onToggleAssistant,
 }: KanbanBoardProps) => {
@@ -128,6 +130,18 @@ export const KanbanBoard = ({
     });
   };
 
+  const handleEditCard = (cardId: string, title: string, details: string) => {
+    if (onEditCard) {
+      void onEditCard(cardId, title, details);
+      return;
+    }
+
+    setInternalBoard((prev) => ({
+      ...prev,
+      cards: { ...prev.cards, [cardId]: { id: cardId, title, details } },
+    }));
+  };
+
   const activeCard = activeCardId ? cardsById[activeCardId] : null;
 
   return (
@@ -200,6 +214,7 @@ export const KanbanBoard = ({
                 onRename={handleRenameColumn}
                 onAddCard={handleAddCard}
                 onDeleteCard={handleDeleteCard}
+                onEditCard={handleEditCard}
               />
             ))}
           </section>

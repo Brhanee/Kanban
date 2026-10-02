@@ -24,7 +24,7 @@ async function fetchJson<T>(url: string, options: RequestInit = {}, token?: stri
   const payload = await response.json().catch(() => null);
 
   if (!response.ok) {
-    throw new Error(payload?.detail ?? "Request failed");
+    throw new Error(typeof payload?.detail === "string" ? payload.detail : "Request failed");
   }
 
   return payload as T;
@@ -198,6 +198,21 @@ export default function Home() {
     });
   };
 
+  const handleEditCard = async (cardId: string, title: string, details: string) => {
+    if (!token) {
+      return;
+    }
+
+    await runBoardAction(async () => {
+      await fetchJson(`/api/cards/${cardId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title, details }),
+      }, token);
+
+      await loadBoard(token);
+    });
+  };
+
   if (!isAuthenticated) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
@@ -292,6 +307,7 @@ export default function Home() {
         onRenameColumn={handleRenameColumn}
         onAddCard={handleAddCard}
         onDeleteCard={handleDeleteCard}
+        onEditCard={handleEditCard}
       />
       {token ? (
         <AIAssistant

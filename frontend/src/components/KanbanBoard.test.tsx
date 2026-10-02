@@ -20,13 +20,45 @@ describe("KanbanBoard", () => {
     expect(onToggleAssistant).toHaveBeenCalledOnce();
   });
 
-  it("renames a column", async () => {
+  it("renames a column once when the edit is committed", async () => {
+    const onRenameColumn = vi.fn();
+    render(<KanbanBoard onRenameColumn={onRenameColumn} />);
+    const input = within(getFirstColumn()).getByLabelText("Column title");
+    await userEvent.clear(input);
+    await userEvent.type(input, "New Name{Enter}");
+    expect(onRenameColumn).toHaveBeenCalledOnce();
+    expect(onRenameColumn).toHaveBeenCalledWith("col-backlog", "New Name");
+  });
+
+  it("restores the column title when cleared or cancelled", async () => {
+    const onRenameColumn = vi.fn();
+    render(<KanbanBoard onRenameColumn={onRenameColumn} />);
+    const input = within(getFirstColumn()).getByLabelText("Column title");
+    await userEvent.clear(input);
+    await userEvent.tab();
+    expect(input).toHaveValue("Backlog");
+    await userEvent.type(input, " draft{Escape}");
+    expect(input).toHaveValue("Backlog");
+    expect(onRenameColumn).not.toHaveBeenCalled();
+  });
+
+  it("edits a card", async () => {
     render(<KanbanBoard />);
     const column = getFirstColumn();
-    const input = within(column).getByLabelText("Column title");
-    await userEvent.clear(input);
-    await userEvent.type(input, "New Name");
-    expect(input).toHaveValue("New Name");
+    await userEvent.click(
+      within(column).getByRole("button", { name: "Edit Align roadmap themes" })
+    );
+    const title = within(column).getByLabelText("Card title");
+    await userEvent.clear(title);
+    await userEvent.type(title, "Edited title");
+    const details = within(column).getByLabelText("Card details");
+    await userEvent.clear(details);
+    await userEvent.type(details, "Edited details");
+    await userEvent.click(within(column).getByRole("button", { name: "Save" }));
+
+    expect(within(column).getByText("Edited title")).toBeInTheDocument();
+    expect(within(column).getByText("Edited details")).toBeInTheDocument();
+    expect(within(column).queryByText("Align roadmap themes")).not.toBeInTheDocument();
   });
 
   it("adds and removes a card", async () => {
